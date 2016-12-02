@@ -31,9 +31,9 @@
  
       #layer_selector li {
         border-bottom: 1px solid #999;
-        padding: 15px 30px;
+        padding: 10px 10px;
         font-family: "Helvetica", Arial;
-        font-size: 13px;
+        font-size: 11px;
         color: #444;
         cursor: auto;
       }
@@ -56,6 +56,7 @@
   <body>
 
     <div id="map"></div>
+    
     <div id="layer_selector" class="cartodb-infobox">
       <ul>
         <li id="1" class="selected">All Odors</li>
@@ -146,7 +147,7 @@
 
         // This additional section of code zooms the map one level out on small screens for a better display
         width = $(window).width();
-        height = $(window).height();
+        // height = $(window).height();
         if (width < 500) {
           // set the zoom level to 1
           map.setZoom(9);
