@@ -1,50 +1,182 @@
+
+
 <!DOCTYPE html>
 <html>
+  <head>
+    <title>The stenches of the Bay Area | CartoDB.js</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <link rel="shortcut icon" href="http://cartodb.com/assets/favicon.ico" />
 
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  <title>Week 4 class exercise</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="css/bootstrap.min.css" rel="stylesheet"> 
-</head>
+   
+    <style>
+      html, body, #map {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+        /*background: black;*/
+      }
+ 
+      #layer_selector {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        padding: 0;
+      }
+ 
+      #layer_selector ul {
+        padding: 0; margin: 0;
+        list-style-type: none;
+      }
+ 
+      #layer_selector li {
+        border-bottom: 1px solid #999;
+        padding: 15px 30px;
+        font-family: "Helvetica", Arial;
+        font-size: 13px;
+        color: #444;
+        cursor: auto;
+      }
+ 
+      #layer_selector li:hover {
+        background-color: #F0F0F0;
+        cursor: pointer;
+      }
+ 
+      #layer_selector li.selected {
+        background-color: #EEE;
+      }
+    </style>
+ 
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.css" />
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.ie.css" />
+    <![endif]-->
+  </head>
+  <body>
 
-<body class="markdown github">
+    <div id="map"></div>
+    <div id="layer_selector" class="cartodb-infobox">
+      <ul>
+        <li id="1" class="selected">All Odors</li>
+        <li id="2">Garbage</li>
+        <li id="3">Burning Chemicals</li>
+        <li id="4">Just Terrible</li>
+        <li id="5">Rotten Sewage</li>
+      </ul>
+    </div>
+ 
+    <!-- include cartodb.js library -->
+    <script src="http://libs.cartocdn.com/cartodb.js/v3/cartodb.js"></script>
+ 
+    <script>
 
-	<header class="navbar navbar-default">
-	<!-- <header class="navbar-default navbar-fixed-top"> -->
-		<div class="container">
-			<nav role="navigation">
-				<div class="navbar-header">
-					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-						<span class="sr-only">Toggle navigation</span>
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-					</button>
-					<a href="index.html" class="navbar-brand">Week 4 exercise</a>
-				</div> <!-- /.navbar-header -->
-				<!-- Collect the nav links, forms, and other content for toggling -->
-				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-					<ul class="nav navbar-nav">
-						<li class="dropdown">
-							<a href="#" class="dropdown-toggle" data-toggle="dropdown">Links<b class="caret"></b></a>
-							<ul class="dropdown-menu">
-								<li><a href="link1.html">Link 1</a></li>
-								<li><a href="link2.html">Link 2</a></li>	
-							</ul>
-						</li>
-						<li><a href="mailto:peter@peteraldhous.com">Email</a></li>					
-					</ul>
-				</div><!-- /.navbar-collapse -->
-			</nav>
-		</div> <!-- /.navbar-header -->
-	</header>
+      // creates a basemap to add to the map
+      var basemap = L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
+      });
 
-	<div class="container">
+      // creates a variable called options, used later to switch off the multiple legends
+      var options = {
+        legends: false
+      }
+ 
+      var selectedLayer;
+      // create layer selector
+      function createSelector(layers) {
+        var sql = new cartodb.SQL({ user: 'documentation' });
+ 
+        var $options = $('#layer_selector li');
+        $options.click(function(e) {
+          // get the area of the selected layer
+          var $li = $(e.target);
+          var layer = $li.attr('id');
+          if(selectedLayer != layer ) {
+            // definitely more elegant ways to do this, but went for
+            // ease of understanding
+            if (layer == '1') {
+              layers.getSubLayer(0).show(); // All Odors
+              layers.getSubLayer(1).hide(); // Garbage
+              layers.getSubLayer(2).hide(); // Burning Chemicals
+              layers.getSubLayer(3).hide(); // Just Terrible
+              layers.getSubLayer(4).hide(); // Rotten Sewage
+            }
+            else if (layer == '2') {
+              layers.getSubLayer(0).hide();
+              layers.getSubLayer(1).show();
+              layers.getSubLayer(2).hide();
+              layers.getSubLayer(3).hide();
+              layers.getSubLayer(4).hide();
+            }
+            else if (layer == '3') {
+              layers.getSubLayer(0).hide();
+              layers.getSubLayer(1).hide();
+              layers.getSubLayer(2).show();
+              layers.getSubLayer(3).hide();
+              layers.getSubLayer(4).hide();
+            }  
+              else if (layer == '4') {
+              layers.getSubLayer(0).hide();
+              layers.getSubLayer(1).hide();
+              layers.getSubLayer(2).hide();
+              layers.getSubLayer(3).show();
+              layers.getSubLayer(4).hide();
+             } 
+            else {
+              layers.getSubLayer(0).hide();
+              layers.getSubLayer(1).hide();
+              layers.getSubLayer(2).hide();
+              layers.getSubLayer(3).hide();
+              layers.getSubLayer(4).show();
+            }
+          }
+        });
+      }     
+ 
+      var layerN = {};
+      function main() {
+        var map = L.map('map', { 
+          zoomControl: true,
+          center: [37.7, -122.3],
+          zoom: 9
+        });
+
+        // This adds the basemap
+        map.addLayer(basemap);
+
+        // This additional section of code zooms the map one level out on small screens for a better display
+        width = $(window).width();
+        height = $(window).height();
+        if (width < 500) {
+          // set the zoom level to 1
+          map.setZoom(9);
+        } else {
+          map.setZoom(10);
+        } 
+        //
+        
+        // get the currently selected style
+        selectedStyle = $('li.selected').attr('id');
+ 
+        cartodb.createLayer(map, 'https://brinker.carto.com/api/v2/viz/b86218ba-b204-11e6-99af-0e3ebc282e83/viz.json', options) // note the inclusions of options here, to remove the legends
+        .addTo(map)
+        .done(function(layers) {
+          createSelector(layers);
+              // Need to add this next section here to set up initial display with only your 'All odors' layer. Otherwise they are all displayed until you click
+              layers.getSubLayer(0).show(); // All Odors
+              layers.getSubLayer(1).hide(); // Garbage
+              layers.getSubLayer(2).hide(); // Burning Chemicals
+              layers.getSubLayer(3).hide(); // Just Terrible
+              layers.getSubLayer(4).hide(); // Rotten Sewage
+        })
+        .error(function(err) {
+          console.log(err);
+        });
+      }
+ 
+      window.onload = main;
 
 
-	</div> <!-- /.container -->
-	<script src="http://code.jquery.com/jquery.min.js"></script>
-	<script src="js/bootstrap.min.js"></script>
-</body>
+    </script>
+  </body>
 </html>
